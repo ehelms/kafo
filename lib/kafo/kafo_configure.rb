@@ -22,7 +22,6 @@ require 'kafo/wizard'
 require 'kafo/system_checker'
 require 'kafo/puppet_command'
 require 'kafo/puppet_log_parser'
-require 'kafo/progress_bar'
 require 'kafo/hooking'
 require 'kafo/exit_handler'
 require 'kafo/scenario_manager'
@@ -47,7 +46,6 @@ module Kafo
       self.class.preset_color_scheme
       self.class.logger           = Logger.new
       self.class.exit_handler     = ExitHandler.new
-      @progress_bar               = nil
       @config_reload_requested    = false
 
       scenario_manager = setup_scenario_manager
@@ -125,8 +123,6 @@ module Kafo
 
       if (self.class.verbose = !!verbose?)
         Logger.setup_verbose
-      else
-        @progress_bar = self.class.config.app[:colors] ? ProgressBars::Colored.new : ProgressBars::BlackWhite.new
       end
 
       unless skip_checks_i_know_better?
@@ -429,7 +425,7 @@ module Kafo
       execution_env.store_answers
       puppetconf = execution_env.configure_puppet(
         'color'     => false,
-        'evaltrace' => !!@progress_bar,
+        'evaltrace' => true,
         'noop'      => !!noop?,
         'profile'   => !!profile?,
         'show_diff' => true,
@@ -451,7 +447,6 @@ module Kafo
             stdin.each do |line|
               line = normalize_encoding(line)
               progress_log(*log_parser.parse(line))
-              @progress_bar.update(line) if @progress_bar
             end
           rescue Errno::EIO # we reach end of input
             exit_status = PTY.check(pid, true) if PTY.respond_to?(:check) # ruby >= 1.9.2
@@ -467,7 +462,6 @@ module Kafo
       rescue PTY::ChildExited => e # could be raised by Process.wait on older ruby or by PTY.check
         exit_code = e.status.exitstatus
       end
-      @progress_bar.close if @progress_bar
       logger.info "Puppet has finished, bye!"
       self.class.exit(exit_code) do
         self.class.hooking.execute(:post)
@@ -475,7 +469,6 @@ module Kafo
     end
 
     def progress_log(method, message)
-      @progress_bar.print_error(message + "\n") if method == :error && @progress_bar
       logger.send(method, message)
     end
 
