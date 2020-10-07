@@ -118,7 +118,8 @@ module Kafo
       logger.info("Running installer with args #{args.inspect}")
       super
     ensure
-      logger.info("Installer finished in #{Time.now - started_at} seconds")
+      logger.debug("Installer finished in #{Time.now - started_at} seconds")
+      self.class.hooking.execute(:install_messages, no_log: true)
     end
 
     def execute
@@ -470,7 +471,7 @@ module Kafo
       end
 
       @progress_bar.close if @progress_bar
-      logger.info "Puppet has finished, bye!"
+      logger.debug "Puppet has finished, bye!"
 
       self.class.exit(exit_code) do
         self.class.hooking.execute(:post)
