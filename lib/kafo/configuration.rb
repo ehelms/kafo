@@ -33,6 +33,7 @@ module Kafo
         :facts                => {},
         :low_priority_modules => [],
         :verbose_log_level    => 'notice',
+        :verbose              => false,
         :skip_puppet_version_check => false,
         :parser_cache_path    => nil,
         :ignore_undocumented  => nil,
