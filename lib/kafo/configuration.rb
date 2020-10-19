@@ -15,6 +15,8 @@ module Kafo
         :description          => '',
         :enabled              => true,
         :log_dir              => '/var/log/kafo',
+        :log_owner            => nil,
+        :log_group            => nil,
         :store_dir            => '',
         :log_name             => 'configuration.log',
         :log_level            => 'notice',
@@ -26,11 +28,19 @@ module Kafo
         :colors               => Kafo::ColorScheme.colors_possible?,
         :color_of_background  => :dark,
         :hook_dirs            => [],
+        :check_dirs           => nil,
         :custom               => {},
         :facts                => {},
         :low_priority_modules => [],
         :verbose_log_level    => 'notice',
-        :skip_puppet_version_check => false
+        :skip_puppet_version_check => false,
+        :parser_cache_path    => nil,
+        :ignore_undocumented  => nil,
+        :order                => nil,
+        :hiera_config         => nil,
+        :kafo_modules_dir     => nil,
+        :config_header_file   => nil,
+        :dont_save_answers    => false,
     }
 
     def self.get_scenario_id(filename)
@@ -57,10 +67,13 @@ module Kafo
 
     def save_configuration(configuration)
       return true unless @persist
+
+      trimmed = configuration.reject { |key, value| !DEFAULT.key?(key) }
+
       begin
         FileUtils.touch @config_file
         File.chmod 0600, @config_file
-        File.open(@config_file, 'w') { |file| file.write(format(YAML.dump(configuration))) }
+        File.open(@config_file, 'w') { |file| file.write(format(YAML.dump(trimmed))) }
       rescue Errno::EACCES
         puts "Insufficient permissions to write to #{@config_file}, can not continue"
         KafoConfigure.exit(:insufficient_permissions)

@@ -5,6 +5,7 @@ module Kafo
     before do
       generate_installer
       add_manifest
+      @config_file = "#{INSTALLER_HOME}/config/installer-scenarios.d/default.yaml"
     end
 
     describe '--help' do
@@ -171,6 +172,22 @@ module Kafo
         code, _, err = run_command '../bin/kafo-configure --skip-puppet-version-check'
         _(code.exitstatus).must_equal 0, err
         _(File.exist?("#{INSTALLER_HOME}/testing")).must_equal true
+      end
+    end
+
+    describe 'the configuration file' do
+      it 'must only save defined values' do
+        code, _, err = run_command '../bin/kafo-configure'
+
+        _(code).must_equal 0, err
+        _(YAML.load_file(@config_file).keys.sort).must_equal Kafo::Configuration::DEFAULT.keys.sort
+      end
+
+      it 'must not save non persisted command line options' do
+        code, _, err = run_command '../bin/kafo-configure --noop'
+
+        _(code).must_equal 0, err
+        _(YAML.load_file(@config_file).keys.sort).must_equal Kafo::Configuration::DEFAULT.keys.sort
       end
     end
   end
