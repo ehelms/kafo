@@ -386,16 +386,16 @@ module Kafo
     end
 
     def parse_app_arguments
-      self.class.app_options.each do |option|
-        name                    = option.attribute_name
-        value                   = send(option.flag? ? "#{name}?" : name)
+      self.class.app_options.each do |attribute_name, option|
+        name                    = attribute_name
+        value                   = send(option[:option].flag? ? "#{name}?" : name)
 
         if config.app.key?(name.to_sym)
           if !value.nil?
             config.app[name.to_sym] = value
           end
         else
-          config.app[name.to_sym] = value.nil? ? option.default_value : value
+          config.app[name.to_sym] = value.nil? ? option[:option].default_value : value
         end
       end
     end
