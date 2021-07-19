@@ -19,7 +19,8 @@ module Kafo
           :scenario_error => 27,
           :missing_argument => 28,
           :insufficient_permissions => 29,
-          :puppet_version_error => 30
+          :puppet_version_error => 30,
+          :invalid_answer_file => 31
       }
     end
 

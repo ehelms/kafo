@@ -73,7 +73,7 @@ module Kafo
       end
 
       it 'instantiates type with escaped regexes in arguments' do
-        data_type.expect(:new, 'instance', ['https?:\/\/\w+\.com', 'String'])
+        eata_type.expect(:new, 'instance', ['https?:\/\/\w+\.com', 'String'])
         _(DataType.new_from_string('Example[/https?:\/\/\w+\.com/, String]')).must_equal 'instance'
       end
 
