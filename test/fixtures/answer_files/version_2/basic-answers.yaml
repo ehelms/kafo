@@ -1,0 +1,27 @@
+---
+class_a:
+  enabled: true
+class_b:
+  enabled: always
+  parameters:
+    key: value
+class_c:
+  enabled: true
+  parameters:
+    key1: value
+  include:
+    - key1
+  exclude:
+    - key2
+class_d:
+  enabled: true
+  parameters:
+    key1: value
+  include:
+    - key1
+class_e:
+  enabled: true
+  exclude:
+    - key1
+class_f:
+  enabled: false

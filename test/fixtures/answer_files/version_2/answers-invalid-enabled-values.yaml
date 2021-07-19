@@ -1,0 +1,9 @@
+---
+class_a:
+  enabled: true
+class_b:
+  enabled: 1
+class_c:
+  enabled:
+class_d:
+  enabled: 'true'

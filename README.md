@@ -160,6 +160,45 @@ As you may have noticed there are several ways how to specify arguments. Here's 
 
 ## Answer File Schema
 
+### Version 2
+
+The answer file schema can be described using Puppet types as such:
+
+```
+Hash[
+  String $puppet_class = Hash[
+    enabled => Boolean,
+    parameters => Hash[String, Variant[String, Boolean, Integer, Array, Hash],
+    include => Array[String],
+    exclude => Array[String]
+  ]
+]
+```
+
+An example of each available option:
+
+```
+class_a:
+  enabled: true
+  parameters:
+    key: value
+class_b:
+  enabled: false
+class_c:
+  enabled: true
+class_d:
+  enabled: true
+  parameters:
+    key1: value
+    key2: 'value'
+    key3: 4
+  exclude:
+    - key5
+    - key6
+```
+
+### Version 1
+
 The answer file schema can be described using Puppet types as such:
 
 ```
