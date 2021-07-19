@@ -6,6 +6,7 @@ require 'kafo/color_scheme'
 require 'kafo/data_type_parser'
 require 'kafo/execution_environment'
 require 'kafo/scenario_option'
+require 'kafo/answer_file'
 
 module Kafo
   class Configuration
@@ -55,13 +56,8 @@ module Kafo
       configure_application
       @logger = KafoConfigure.logger
 
-      @answer_file = app[:answer_file]
-      begin
-        @data = load_yaml_file(@answer_file)
-      rescue Errno::ENOENT
-        puts "No answer file at #{@answer_file} found, can not continue"
-        KafoConfigure.exit(:no_answer_file)
-      end
+      @answer_file = AnswerFile.new(app[:answer_file], version: app[:answer_file_version])
+      @answers = @answer_file.answers
 
       @config_dir = File.dirname(@config_file)
       @scenario_id = Configuration.get_scenario_id(@config_file)
@@ -130,7 +126,7 @@ module Kafo
     def modules
       @modules ||= begin
         register_data_types
-        @data.keys.map { |mod| PuppetModule.new(mod, configuration: self).parse }.sort
+        @answer_file.puppet_classes.map { |mod| PuppetModule.new(mod, configuration: self).parse }.sort
       end
     end
 
@@ -231,14 +227,12 @@ EOS
 
     # if a value is a true we return empty hash because we have no specific options for a
     # particular puppet module
-    def [](key)
-      value = @data[key]
-      value.is_a?(Hash) ? value : {}
+    def [](puppet_class)
+      @answer_file.parameters_for_class(puppet_class)
     end
 
-    def module_enabled?(mod)
-      value = @data[mod.is_a?(String) ? mod : mod.identifier]
-      !!value || value.is_a?(Hash)
+    def module_enabled?(puppet_class)
+      @answer_file.class_enabled?(puppet_class)
     end
 
     def config_header
@@ -248,7 +242,7 @@ EOS
     end
 
     def store(data, file = nil)
-      filename = file || answer_file
+      filename = file || @answer_file.filename
       FileUtils.touch filename
       File.chmod 0600, filename
       File.open(filename, 'w') { |f| f.write(config_header + format(YAML.dump(data))) }
@@ -316,17 +310,13 @@ EOS
       log_files.any? { |f| File.size(f) > 0 }
     end
 
-    def answers
-      @data
-    end
-
     def run_migrations
       migrations = Kafo::Migrations.new(migrations_dir)
-      @app, @data = migrations.run(app, answers)
+      @app, @answers = migrations.run(app, @answers)
       if migrations.migrations.count > 0
         @modules = nil # force the lazy loaded modules to reload next time they are used
         save_configuration(app)
-        store(answers)
+        store(@answers)
         migrations.store_applied
         @logger.notice("#{migrations.migrations.count} migration/s were applied. Updated configuration was saved.")
       end
